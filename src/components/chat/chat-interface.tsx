@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { ChatMessage } from '@/types/chat';
-import { useToast } from '@/hooks/useToast';
+import { useState, useRef, useEffect } from "react";
+import { ChatMessage } from "@/types/chat";
+import { useToast } from "@/hooks/useToast";
 
 interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
@@ -19,12 +19,12 @@ export function ChatInterface({
   isStreaming,
   error,
 }: ChatInterfaceProps) {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { showError } = useToast();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -41,12 +41,12 @@ export function ChatInterface({
     e.preventDefault();
     if (inputValue.trim() && !isStreaming) {
       onSendMessage(inputValue.trim());
-      setInputValue('');
+      setInputValue("");
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
@@ -56,6 +56,15 @@ export function ChatInterface({
     <div className="flex flex-col h-full bg-white rounded-lg border">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {error && (
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
+            <strong className="font-bold">错误：</strong>
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
         {messages.map((message, index) => (
           <div key={index} className="space-y-3">
             {/* User Message */}
@@ -64,7 +73,7 @@ export function ChatInterface({
                 <p className="whitespace-pre-wrap">{message.question}</p>
               </div>
             </div>
-            
+
             {/* AI Response */}
             <div className="flex justify-start">
               <div className="bg-gray-100 px-4 py-2 rounded-lg rounded-bl-none max-w-[80%]">
@@ -79,10 +88,10 @@ export function ChatInterface({
           <div className="space-y-3">
             <div className="flex justify-end">
               <div className="bg-blue-500 text-white px-4 py-2 rounded-lg rounded-br-none max-w-[80%]">
-                <p className="whitespace-pre-wrap">{messages[messages.length]?.question || inputValue}</p>
+                <p className="whitespace-pre-wrap">{inputValue}</p>
               </div>
             </div>
-            
+
             <div className="flex justify-start">
               <div className="bg-gray-100 px-4 py-2 rounded-lg rounded-bl-none max-w-[80%]">
                 <p className="whitespace-pre-wrap">
@@ -93,7 +102,7 @@ export function ChatInterface({
             </div>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -108,14 +117,14 @@ export function ChatInterface({
             disabled={isStreaming}
             className="flex-1 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={1}
-            style={{ minHeight: '44px', maxHeight: '120px' }}
+            style={{ minHeight: "44px", maxHeight: "120px" }}
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || isStreaming}
             className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {isStreaming ? '发送中...' : '发送'}
+            {isStreaming ? "发送中..." : "发送"}
           </button>
         </form>
       </div>

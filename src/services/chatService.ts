@@ -32,7 +32,9 @@ class ChatService {
 
       console.log('收到响应状态:', response.status);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.log('错误响应内容:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const reader = response.body?.getReader();
@@ -40,13 +42,39 @@ class ChatService {
         throw new Error('Response body is not readable');
       }
 
-      const decoder = new TextDecoder();
+      const decoder = new TextDecoder('utf-8');
       let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         
         if (done) {
+          // 处理最后可能剩余的数据
+          if (buffer.trim()) {
+            const lines = buffer.split('\n');
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              
+              if (line.startsWith('data:')) {
+                try {
+                  const jsonStr = line.slice(5);
+                  console.log('解析数据行:', jsonStr);
+                  const data = JSON.parse(jsonStr);
+                  console.log('解析后的数据:', data);
+                  if (data.result && data.result.response) {
+                    onMessage({
+                      eventType: 'message',
+                      data: {
+                        response: data.result.response
+                      }
+                    });
+                  }
+                } catch (e) {
+                  console.warn('解析流数据失败:', line, e);
+                }
+              }
+            }
+          }
           console.log('流式响应完成');
           onComplete();
           break;
@@ -61,21 +89,23 @@ class ChatService {
         for (const line of lines) {
           if (line.trim() === '') continue;
           
-          if (line.startsWith('data: ')) {
+          if (line.startsWith('data:')) {
             try {
-              const jsonStr = line.slice(6);
+              const jsonStr = line.slice(5);
               console.log('解析数据行:', jsonStr);
               const data = JSON.parse(jsonStr);
               console.log('解析后的数据:', data);
-              onMessage({
-                eventType: 'message',
-                data: data.result || data,
-              });
+              if (data.result && data.result.response) {
+                onMessage({
+                  eventType: 'message',
+                  data: {
+                    response: data.result.response
+                  }
+                });
+              }
             } catch (e) {
               console.warn('解析流数据失败:', line, e);
             }
-          } else {
-            console.log('跳过非data行:', line);
           }
         }
       }
@@ -104,7 +134,9 @@ class ChatService {
 
       console.log('收到响应状态:', response.status);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.log('错误响应内容:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const reader = response.body?.getReader();
@@ -112,13 +144,39 @@ class ChatService {
         throw new Error('Response body is not readable');
       }
 
-      const decoder = new TextDecoder();
+      const decoder = new TextDecoder('utf-8');
       let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         
         if (done) {
+          // 处理最后可能剩余的数据
+          if (buffer.trim()) {
+            const lines = buffer.split('\n');
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              
+              if (line.startsWith('data:')) {
+                try {
+                  const jsonStr = line.slice(5);
+                  console.log('解析数据行:', jsonStr);
+                  const data = JSON.parse(jsonStr);
+                  console.log('解析后的数据:', data);
+                  if (data.result && data.result.response) {
+                    onMessage({
+                      eventType: 'message',
+                      data: {
+                        response: data.result.response
+                      }
+                    });
+                  }
+                } catch (e) {
+                  console.warn('解析流数据失败:', line, e);
+                }
+              }
+            }
+          }
           console.log('流式响应完成');
           onComplete();
           break;
@@ -133,21 +191,23 @@ class ChatService {
         for (const line of lines) {
           if (line.trim() === '') continue;
           
-          if (line.startsWith('data: ')) {
+          if (line.startsWith('data:')) {
             try {
-              const jsonStr = line.slice(6);
+              const jsonStr = line.slice(5);
               console.log('解析数据行:', jsonStr);
               const data = JSON.parse(jsonStr);
               console.log('解析后的数据:', data);
-              onMessage({
-                eventType: 'message',
-                data: data.result || data,
-              });
+              if (data.result && data.result.response) {
+                onMessage({
+                  eventType: 'message',
+                  data: {
+                    response: data.result.response
+                  }
+                });
+              }
             } catch (e) {
               console.warn('解析流数据失败:', line, e);
             }
-          } else {
-            console.log('跳过非data行:', line);
           }
         }
       }

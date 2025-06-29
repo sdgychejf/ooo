@@ -17,27 +17,68 @@ interface ChatDashboardProps {
   apiKey: string;
 }
 
+const CHAT_HISTORY_KEY = "chat_history";
+const CHAT_CONFIG_KEY = "chat_config";
+
 export function ChatDashboard({ apiKey }: ChatDashboardProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedMessages = localStorage.getItem(CHAT_HISTORY_KEY);
+      return savedMessages ? JSON.parse(savedMessages) : [];
+    }
+    return [];
+  });
+
   const [currentMessage, setCurrentMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string>();
   const [chatConfig, setChatConfig] = useState<{
     type: "kb" | "agent";
     config: Partial<KnowledgeBaseChatRequest> | Partial<AgentChatRequest>;
-  }>({
-    type: "kb",
-    config: {
-      kbIds: [],
-      model: "QAnything 4o mini",
-      maxToken: "1024",
-      hybridSearch: "false",
-      networking: "true",
-      sourceNeeded: "true",
-    },
+  }>(() => {
+    if (typeof window !== "undefined") {
+      const savedConfig = localStorage.getItem(CHAT_CONFIG_KEY);
+      return savedConfig
+        ? JSON.parse(savedConfig)
+        : {
+            type: "kb",
+            config: {
+              kbIds: [],
+              model: "QAnything 4o mini",
+              maxToken: "1024",
+              hybridSearch: "false",
+              networking: "true",
+              sourceNeeded: "true",
+            },
+          };
+    }
+    return {
+      type: "kb",
+      config: {
+        kbIds: [],
+        model: "QAnything 4o mini",
+        maxToken: "1024",
+        hybridSearch: "false",
+        networking: "true",
+        sourceNeeded: "true",
+      },
+    };
   });
+
   const { toasts, removeToast, showSuccess, showError } = useToast();
   const responseRef = useRef("");
+
+  // 保存消息历史到本地存储
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  // 保存配置到本地存储
+  useEffect(() => {
+    localStorage.setItem(CHAT_CONFIG_KEY, JSON.stringify(chatConfig));
+  }, [chatConfig]);
 
   useEffect(() => {
     if (apiKey) {
@@ -66,7 +107,6 @@ export function ChatDashboard({ apiKey }: ChatDashboardProps) {
         const newText = streamResponse.data.response;
         console.log("收到新的响应片段:", newText);
         responseRef.current += newText;
-        console.log("当前完整响应:", responseRef.current);
         setCurrentMessage(responseRef.current);
       }
     };
@@ -80,15 +120,18 @@ export function ChatDashboard({ apiKey }: ChatDashboardProps) {
 
     const onComplete = () => {
       console.log("聊天完成，最终响应:", responseRef.current);
-      setMessages((prev) => [
-        ...prev,
-        {
-          question,
-          response: responseRef.current,
-        },
-      ]);
+      if (responseRef.current) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            question,
+            response: responseRef.current,
+          },
+        ]);
+      }
       setCurrentMessage("");
       setIsStreaming(false);
+      responseRef.current = "";
     };
 
     try {
@@ -104,7 +147,10 @@ export function ChatDashboard({ apiKey }: ChatDashboardProps) {
           question,
           kbIds: kbConfig.kbIds,
           prompt: kbConfig.prompt || "",
-          history: messages,
+          history: messages.map((msg) => ({
+            question: msg.question,
+            response: msg.response,
+          })),
           model: kbConfig.model || "QAnything 4o mini",
           maxToken: kbConfig.maxToken || "1024",
           hybridSearch: kbConfig.hybridSearch || "false",
@@ -112,7 +158,7 @@ export function ChatDashboard({ apiKey }: ChatDashboardProps) {
           sourceNeeded: kbConfig.sourceNeeded || "true",
         };
 
-        console.log("发送知识库聊天请求:", request);
+        console.log("发送知识库聊天请求:", JSON.stringify(request, null, 2));
         await chatService.streamKnowledgeBaseChat(
           request,
           onMessage,
@@ -152,6 +198,7 @@ export function ChatDashboard({ apiKey }: ChatDashboardProps) {
     setMessages([]);
     setCurrentMessage("");
     setError(undefined);
+    localStorage.removeItem(CHAT_HISTORY_KEY);
     showSuccess("聊天记录已清空");
   };
 

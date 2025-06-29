@@ -58,6 +58,7 @@ export function ChatConfig({
   ) => {
     const { name, value } = e.target;
     setConfig((prev) => ({ ...prev, [name]: value }));
+    handleChatTypeChange(chatType);
   };
 
   const handleKbIdsChange = (kbId: string) => {
@@ -77,16 +78,16 @@ export function ChatConfig({
         kbIds: config.kbIds,
         prompt: config.prompt,
         model: config.model,
-        maxToken: config.maxToken,
-        hybridSearch: config.hybridSearch,
-        networking: config.networking,
-        sourceNeeded: config.sourceNeeded,
+        maxToken: config.maxToken || "1024",
+        hybridSearch: config.hybridSearch || "false",
+        networking: config.networking || "true",
+        sourceNeeded: config.sourceNeeded || "true",
       };
       onConfigChange(kbConfig, "kb");
     } else {
       const agentConfig: Partial<AgentChatRequest> = {
         uuid: config.uuid,
-        sourceNeeded: config.sourceNeeded,
+        sourceNeeded: config.sourceNeeded || "true",
       };
       onConfigChange(agentConfig, "agent");
     }
@@ -236,91 +237,82 @@ export function ChatConfig({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                模型
-              </label>
-              <select
-                name="model"
-                value={config.model}
-                onChange={handleInputChange}
-                disabled={disabled}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="QAnything 4o mini">QAnything 4o mini</option>
-                <option value="QAnything 16k">QAnything 16k</option>
-                <option value="deepseek-lite">DeepSeek Lite</option>
-                <option value="deepseek-pro">DeepSeek Pro</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                最大Token
-              </label>
-              <select
-                name="maxToken"
-                value={config.maxToken}
-                onChange={handleInputChange}
-                disabled={disabled}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="1024">1024</option>
-                <option value="2048">2048</option>
-                <option value="4096">4096</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              模型 *
+            </label>
+            <select
+              name="model"
+              value={config.model}
+              onChange={handleInputChange}
+              disabled={disabled}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="QAnything 4o mini">QAnything 4o mini</option>
+              <option value="QAnything 4o">QAnything 4o</option>
+            </select>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                混合搜索
-              </label>
-              <select
-                name="hybridSearch"
-                value={config.hybridSearch}
-                onChange={handleInputChange}
-                disabled={disabled}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="false">禁用</option>
-                <option value="true">启用</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              最大Token数 *
+            </label>
+            <input
+              type="text"
+              name="maxToken"
+              value={config.maxToken}
+              onChange={handleInputChange}
+              disabled={disabled}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                网络搜索
-              </label>
-              <select
-                name="networking"
-                value={config.networking}
-                onChange={handleInputChange}
-                disabled={disabled}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="false">禁用</option>
-                <option value="true">启用</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              混合搜索 *
+            </label>
+            <select
+              name="hybridSearch"
+              value={config.hybridSearch}
+              onChange={handleInputChange}
+              disabled={disabled}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="false">否</option>
+              <option value="true">是</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                需要来源
-              </label>
-              <select
-                name="sourceNeeded"
-                value={config.sourceNeeded}
-                onChange={handleInputChange}
-                disabled={disabled}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="false">不需要</option>
-                <option value="true">需要</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              联网搜索 *
+            </label>
+            <select
+              name="networking"
+              value={config.networking}
+              onChange={handleInputChange}
+              disabled={disabled}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="false">否</option>
+              <option value="true">是</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              返回来源 *
+            </label>
+            <select
+              name="sourceNeeded"
+              value={config.sourceNeeded}
+              onChange={handleInputChange}
+              disabled={disabled}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="false">否</option>
+              <option value="true">是</option>
+            </select>
           </div>
         </div>
       )}

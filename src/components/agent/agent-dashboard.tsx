@@ -6,10 +6,11 @@ import { agentService } from "@/services/agentService";
 import { AgentList } from "./agent-list";
 import { AgentForm } from "./agent-form";
 import { AgentDetail } from "./agent-detail";
+import { AgentKbBinding } from "./agent-kb-binding";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ui/toast";
 
-type ViewMode = "list" | "create" | "edit" | "detail";
+type ViewMode = "list" | "create" | "edit" | "detail" | "kb-binding";
 
 interface AgentDashboardProps {
   apiKey: string;
@@ -123,6 +124,11 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
     setViewMode("edit");
   };
 
+  const handleManageKnowledgeBases = (agent: Agent) => {
+    setSelectedAgent(agent);
+    setViewMode("kb-binding");
+  };
+
   if (!apiKey) {
     return (
       <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg border">
@@ -200,6 +206,21 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
             setSelectedAgent(null);
           }}
           onEdit={handleEditAgent}
+          onManageKnowledgeBases={handleManageKnowledgeBases}
+        />
+      )}
+
+      {viewMode === "kb-binding" && selectedAgent && (
+        <AgentKbBinding
+          agent={selectedAgent}
+          apiKey={apiKey}
+          onClose={() => {
+            setViewMode("list");
+            setSelectedAgent(null);
+          }}
+          onSuccess={() => {
+            loadAgents();
+          }}
         />
       )}
       </div>

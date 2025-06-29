@@ -6,9 +6,10 @@ interface AgentDetailProps {
   agent: Agent;
   onClose: () => void;
   onEdit: (agent: Agent) => void;
+  onManageKnowledgeBases?: (agent: Agent) => void;
 }
 
-export function AgentDetail({ agent, onClose, onEdit }: AgentDetailProps) {
+export function AgentDetail({ agent, onClose, onEdit, onManageKnowledgeBases }: AgentDetailProps) {
   return (
     <div className="bg-white p-6 rounded-lg border">
       <div className="flex justify-between items-start mb-4">
@@ -20,6 +21,14 @@ export function AgentDetail({ agent, onClose, onEdit }: AgentDetailProps) {
           >
             编辑
           </button>
+          {onManageKnowledgeBases && (
+            <button
+              onClick={() => onManageKnowledgeBases(agent)}
+              className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+            >
+              管理知识库
+            </button>
+          )}
           <button
             onClick={onClose}
             className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"

@@ -1,6 +1,15 @@
 // 知识库相关的类型定义
 
+// QAnything API 的实际响应格式
 export interface ApiResponse<T = any> {
+  errorCode: string;
+  msg: string;
+  requestId: string;
+  result?: T;
+}
+
+// 兼容旧格式的类型定义
+export interface LegacyApiResponse<T = any> {
   code: number;
   message: string;
   data?: T;
@@ -86,18 +95,13 @@ export interface CreateKbResponse {
   kbId: string;
 }
 
-export interface KbListResponse {
-  kbList: KnowledgeBase[];
-}
+// QAnything API 中，知识库列表直接作为数组返回在 result 字段中
+export interface KbListResponse extends Array<KnowledgeBase> {}
 
-export interface FileListResponse {
-  fileList: Document[];
-}
+// QAnything API 中，文件列表和FAQ列表都直接作为数组返回在 result 字段中
+export interface FileListResponse extends Array<Document> {}
 
-export interface FAQListResponse {
-  faqList: FAQ[];
-}
+export interface FAQListResponse extends Array<FAQ> {}
 
-export interface FAQDetailResponse {
-  faq: FAQ;
-}
+// FAQ详情直接返回FAQ对象在 result 字段中
+export interface FAQDetailResponse extends FAQ {}

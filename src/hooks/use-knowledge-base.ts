@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { KnowledgeBaseClient } from '@/lib/knowledge-base-client';
 import type {
   KnowledgeBase,
@@ -34,7 +34,7 @@ export function useKnowledgeBase(apiKey: string) {
     faqs: [],
   });
 
-  const client = new KnowledgeBaseClient(apiKey);
+  const client = useMemo(() => new KnowledgeBaseClient(apiKey), [apiKey]);
 
   const setLoading = useCallback((loading: boolean) => {
     setState(prev => ({ ...prev, loading }));
@@ -50,11 +50,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.createKnowledgeBase(request);
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchKnowledgeBaseList(); // 刷新列表
-        return response.data;
+        return response.result;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '创建知识库失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '创建知识库失败';
@@ -71,11 +71,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.deleteKnowledgeBase({ kbId });
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchKnowledgeBaseList(); // 刷新列表
         return true;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '删除知识库失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '删除知识库失败';
@@ -88,27 +88,52 @@ export function useKnowledgeBase(apiKey: string) {
 
   // 获取知识库列表
   const fetchKnowledgeBaseList = useCallback(async () => {
+    if (!apiKey) {
+      setError('请先配置 API Key');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     try {
       const response = await client.getKnowledgeBaseList();
-      if (response.code === 0 && response.data) {
+      
+      // 检查响应是否为有效对象
+      if (!response || typeof response !== 'object') {
+        throw new Error(`无效的API响应格式: ${JSON.stringify(response)}`);
+      }
+      
+      // QAnything API 的实际响应格式
+      // 检查是否有错误码 (errorCode 为字符串 "0" 表示成功)
+      if (response.errorCode !== undefined && response.errorCode !== '0') {
+        throw new Error(`API错误 (errorCode: ${response.errorCode}): ${response.msg || '未知错误'}`);
+      }
+      
+      // 检查是否有数据 (数据在 result 字段中)
+      if (response.errorCode === '0' && response.result) {
+        const kbList = Array.isArray(response.result) ? response.result : [];
         setState(prev => ({
           ...prev,
-          knowledgeBases: response.data!.kbList,
+          knowledgeBases: kbList,
         }));
-        return response.data.kbList;
+        return kbList;
       } else {
-        throw new Error(response.message);
+        // 成功但没有数据，返回空列表
+        setState(prev => ({
+          ...prev,
+          knowledgeBases: [],
+        }));
+        return [];
       }
     } catch (error) {
+      console.error('Knowledge base fetch error:', error);
       const errorMessage = error instanceof Error ? error.message : '获取知识库列表失败';
       setError(errorMessage);
       throw error;
     } finally {
       setLoading(false);
     }
-  }, [client]);
+  }, [client, apiKey]);
 
   // 上传文件
   const uploadFile = useCallback(async (request: UploadFileRequest) => {
@@ -116,11 +141,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.uploadFile(request);
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchFileList(request.kbId); // 刷新文件列表
         return true;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '上传文件失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '上传文件失败';
@@ -137,11 +162,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.uploadUrl(request);
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchFileList(request.kbId); // 刷新文件列表
         return true;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '上传URL失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '上传URL失败';
@@ -158,11 +183,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.deleteFiles(request);
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchFileList(request.kbId); // 刷新文件列表
         return true;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '删除文件失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '删除文件失败';
@@ -179,14 +204,20 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.getFileList(kbId);
-      if (response.code === 0 && response.data) {
+      if (response.errorCode === '0' && response.result) {
+        const fileList = Array.isArray(response.result) ? response.result : [];
         setState(prev => ({
           ...prev,
-          documents: response.data!.fileList,
+          documents: fileList,
         }));
-        return response.data.fileList;
+        return fileList;
       } else {
-        throw new Error(response.message);
+        // 成功但没有数据，返回空列表
+        setState(prev => ({
+          ...prev,
+          documents: [],
+        }));
+        return [];
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '获取文件列表失败';
@@ -203,11 +234,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.updateKnowledgeBaseName(request);
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchKnowledgeBaseList(); // 刷新列表
         return true;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '更新知识库名称失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '更新知识库名称失败';
@@ -224,11 +255,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.createFAQ(request);
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchFAQList(request.kbId); // 刷新FAQ列表
         return true;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '创建FAQ失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '创建FAQ失败';
@@ -245,11 +276,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.updateFAQ(request);
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchFAQList(request.kbId); // 刷新FAQ列表
         return true;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '更新FAQ失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '更新FAQ失败';
@@ -266,11 +297,11 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.deleteFAQs(request);
-      if (response.code === 0) {
+      if (response.errorCode === '0') {
         await fetchFAQList(request.kbId); // 刷新FAQ列表
         return true;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '删除FAQ失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '删除FAQ失败';
@@ -287,14 +318,20 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.getFAQList(kbId);
-      if (response.code === 0 && response.data) {
+      if (response.errorCode === '0' && response.result) {
+        const faqList = Array.isArray(response.result) ? response.result : [];
         setState(prev => ({
           ...prev,
-          faqs: response.data!.faqList,
+          faqs: faqList,
         }));
-        return response.data.faqList;
+        return faqList;
       } else {
-        throw new Error(response.message);
+        // 成功但没有数据，返回空列表
+        setState(prev => ({
+          ...prev,
+          faqs: [],
+        }));
+        return [];
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '获取FAQ列表失败';
@@ -311,10 +348,10 @@ export function useKnowledgeBase(apiKey: string) {
     setError(null);
     try {
       const response = await client.getFAQDetail(request);
-      if (response.code === 0 && response.data) {
-        return response.data.faq;
+      if (response.errorCode === '0' && response.result) {
+        return response.result;
       } else {
-        throw new Error(response.message);
+        throw new Error(response.msg || '获取FAQ详情失败');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '获取FAQ详情失败';

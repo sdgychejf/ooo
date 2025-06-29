@@ -34,7 +34,8 @@ export class KnowledgeBaseClient {
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
     }
     return response.json();
   }
@@ -69,6 +70,7 @@ export class KnowledgeBaseClient {
       method: 'POST',
       headers: {
         'Authorization': this.apiKey,
+        // 注意：FormData时不要设置Content-Type，让浏览器自动设置multipart/form-data
       },
       body: formData,
     });
@@ -123,7 +125,7 @@ export class KnowledgeBaseClient {
     return this.handleResponse(response);
   }
 
-  // 创建FAQ
+  // 创建FAQ (问答集)
   async createFAQ(request: CreateFAQRequest): Promise<ApiResponse> {
     const formData = new FormData();
     formData.append('kbId', request.kbId);
@@ -134,13 +136,14 @@ export class KnowledgeBaseClient {
       method: 'POST',
       headers: {
         'Authorization': this.apiKey,
+        // 注意：FormData时不要设置Content-Type，让浏览器自动设置
       },
       body: formData,
     });
     return this.handleResponse(response);
   }
 
-  // 更新FAQ
+  // 更新FAQ (问答集)
   async updateFAQ(request: UpdateFAQRequest): Promise<ApiResponse> {
     const formData = new FormData();
     formData.append('kbId', request.kbId);
@@ -152,6 +155,7 @@ export class KnowledgeBaseClient {
       method: 'POST',
       headers: {
         'Authorization': this.apiKey,
+        // 注意：FormData时不要设置Content-Type，让浏览器自动设置
       },
       body: formData,
     });

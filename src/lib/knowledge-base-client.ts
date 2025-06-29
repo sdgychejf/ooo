@@ -25,11 +25,16 @@ export class KnowledgeBaseClient {
     this.apiKey = apiKey;
   }
 
-  private getHeaders(contentType: string = 'application/json') {
-    return {
+  private getHeaders(contentType?: string) {
+    const headers: Record<string, string> = {
       'Authorization': this.apiKey,
-      'Content-Type': contentType,
     };
+    
+    if (contentType) {
+      headers['Content-Type'] = contentType;
+    }
+    
+    return headers;
   }
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
@@ -44,7 +49,7 @@ export class KnowledgeBaseClient {
   async createKnowledgeBase(request: CreateKbRequest): Promise<ApiResponse<CreateKbResponse>> {
     const response = await fetch(`${this.baseUrl}/create_kb`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.getHeaders('application/json'),
       body: JSON.stringify(request),
     });
     return this.handleResponse<CreateKbResponse>(response);
@@ -54,7 +59,7 @@ export class KnowledgeBaseClient {
   async deleteKnowledgeBase(request: DeleteKbRequest): Promise<ApiResponse> {
     const response = await fetch(`${this.baseUrl}/delete_kb`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.getHeaders('application/json'),
       body: JSON.stringify(request),
     });
     return this.handleResponse(response);
@@ -81,7 +86,7 @@ export class KnowledgeBaseClient {
   async uploadUrl(request: UploadUrlRequest): Promise<ApiResponse> {
     const response = await fetch(`${this.baseUrl}/upload_url`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.getHeaders('application/json'),
       body: JSON.stringify(request),
     });
     return this.handleResponse(response);
@@ -91,7 +96,7 @@ export class KnowledgeBaseClient {
   async deleteFiles(request: DeleteFileRequest): Promise<ApiResponse> {
     const response = await fetch(`${this.baseUrl}/delete_file`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.getHeaders('application/json'),
       body: JSON.stringify(request),
     });
     return this.handleResponse(response);
@@ -101,7 +106,7 @@ export class KnowledgeBaseClient {
   async getKnowledgeBaseList(): Promise<ApiResponse<KbListResponse>> {
     const response = await fetch(`${this.baseUrl}/kb_list`, {
       method: 'GET',
-      headers: this.getHeaders(),
+      headers: this.getHeaders(), // 不传Content-Type
     });
     return this.handleResponse<KbListResponse>(response);
   }
@@ -110,7 +115,7 @@ export class KnowledgeBaseClient {
   async getFileList(kbId: string): Promise<ApiResponse<FileListResponse>> {
     const response = await fetch(`${this.baseUrl}/file_list?kbId=${encodeURIComponent(kbId)}`, {
       method: 'GET',
-      headers: this.getHeaders(),
+      headers: this.getHeaders(), // 不传Content-Type
     });
     return this.handleResponse<FileListResponse>(response);
   }
@@ -119,7 +124,7 @@ export class KnowledgeBaseClient {
   async updateKnowledgeBaseName(request: UpdateKbNameRequest): Promise<ApiResponse> {
     const response = await fetch(`${this.baseUrl}/kb_config`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.getHeaders('application/json'),
       body: JSON.stringify(request),
     });
     return this.handleResponse(response);
@@ -166,7 +171,7 @@ export class KnowledgeBaseClient {
   async deleteFAQs(request: DeleteFAQRequest): Promise<ApiResponse> {
     const response = await fetch(`${this.baseUrl}/delete_faq`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.getHeaders('application/json'),
       body: JSON.stringify(request),
     });
     return this.handleResponse(response);
@@ -176,7 +181,7 @@ export class KnowledgeBaseClient {
   async getFAQList(kbId: string): Promise<ApiResponse<FAQListResponse>> {
     const response = await fetch(`${this.baseUrl}/faq_list?kbId=${encodeURIComponent(kbId)}`, {
       method: 'GET',
-      headers: this.getHeaders(),
+      headers: this.getHeaders(), // 不传Content-Type
     });
     return this.handleResponse<FAQListResponse>(response);
   }
@@ -185,7 +190,7 @@ export class KnowledgeBaseClient {
   async getFAQDetail(request: GetFAQDetailRequest): Promise<ApiResponse<FAQDetailResponse>> {
     const response = await fetch(`${this.baseUrl}/faqDetail`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.getHeaders('application/json'),
       body: JSON.stringify(request),
     });
     return this.handleResponse<FAQDetailResponse>(response);

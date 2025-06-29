@@ -249,26 +249,79 @@ export function useKnowledgeBase(apiKey: string) {
     }
   }, [client]);
 
-  // 创建FAQ
-  const createFAQ = useCallback(async (request: CreateFAQRequest) => {
+  // 获取FAQ列表
+  const fetchFAQList = useCallback(async (kbId: string) => {
+    console.log('fetchFAQList: 开始获取FAQ列表, kbId:', kbId);
     setLoading(true);
     setError(null);
     try {
-      const response = await client.createFAQ(request);
+      const response = await client.getFAQList(kbId);
+      console.log('fetchFAQList: API响应:', response);
       if (response.errorCode === '0') {
-        await fetchFAQList(request.kbId); // 刷新FAQ列表
-        return true;
+        const faqList = Array.isArray(response.result?.faqList) ? response.result.faqList : [];
+        console.log('fetchFAQList: 成功获取FAQ列表, 数量:', faqList.length);
+        setState(prev => ({
+          ...prev,
+          faqs: faqList,
+        }));
+        return faqList;
+      } else if (response.errorCode === '303') {
+        // 服务器错误，可能是知识库没有FAQ，返回空列表
+        console.warn('FAQ列表API返回服务器错误，可能此知识库还没有FAQ');
+        setState(prev => ({
+          ...prev,
+          faqs: [],
+        }));
+        return [];
       } else {
-        throw new Error(response.msg || '创建FAQ失败');
+        throw new Error(response.msg || '获取FAQ列表失败');
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '创建FAQ失败';
+      console.error('获取FAQ列表错误:', error);
+      // 如果是500错误，可能是知识库没有FAQ，不显示错误，只显示空列表
+      if (error instanceof Error && error.message.includes('500')) {
+        console.warn('FAQ API返回500错误，可能知识库没有FAQ，显示空列表');
+        setState(prev => ({
+          ...prev,
+          faqs: [],
+        }));
+        return [];
+      }
+      const errorMessage = error instanceof Error ? error.message : '获取FAQ列表失败';
       setError(errorMessage);
       throw error;
     } finally {
       setLoading(false);
     }
   }, [client]);
+
+
+  // 创建FAQ
+  const createFAQ = useCallback(async (request: CreateFAQRequest) => {
+    console.log('开始创建FAQ:', request);
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await client.createFAQ(request);
+      console.log('创建FAQ响应:', response);
+      if (response.errorCode === '0') {
+        console.log('FAQ创建成功，开始刷新列表');
+        await fetchFAQList(request.kbId); // 刷新FAQ列表
+        console.log('FAQ列表刷新完成');
+        return true;
+      } else {
+        console.error('FAQ创建失败:', response);
+        throw new Error(response.msg || '创建FAQ失败');
+      }
+    } catch (error) {
+      console.error('创建FAQ过程中出错:', error);
+      const errorMessage = error instanceof Error ? error.message : '创建FAQ失败';
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [client, fetchFAQList]);
 
   // 更新FAQ
   const updateFAQ = useCallback(async (request: UpdateFAQRequest) => {
@@ -312,35 +365,6 @@ export function useKnowledgeBase(apiKey: string) {
     }
   }, [client]);
 
-  // 获取FAQ列表
-  const fetchFAQList = useCallback(async (kbId: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await client.getFAQList(kbId);
-      if (response.errorCode === '0' && response.result) {
-        const faqList = Array.isArray(response.result) ? response.result : [];
-        setState(prev => ({
-          ...prev,
-          faqs: faqList,
-        }));
-        return faqList;
-      } else {
-        // 成功但没有数据，返回空列表
-        setState(prev => ({
-          ...prev,
-          faqs: [],
-        }));
-        return [];
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '获取FAQ列表失败';
-      setError(errorMessage);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [client]);
 
   // 获取FAQ详情
   const fetchFAQDetail = useCallback(async (request: GetFAQDetailRequest) => {

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { KnowledgeBaseList, CreateKnowledgeBaseForm, FileUpload, DocumentList } from './index';
+import { KnowledgeBaseList, CreateKnowledgeBaseForm, FileUpload, DocumentList, FAQList, CreateFAQForm, EditFAQForm } from './index';
 import EditKnowledgeBaseForm from './edit-knowledge-base-form';
-import type { KnowledgeBase } from '@/types/knowledge-base';
+import type { KnowledgeBase, FAQ } from '@/types/knowledge-base';
 
 interface KnowledgeBaseDashboardProps {
   apiKey: string;
@@ -14,7 +14,12 @@ export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboar
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingKb, setEditingKb] = useState<KnowledgeBase | null>(null);
-  const [activeTab, setActiveTab] = useState<'documents' | 'upload'>('documents');
+  const [activeTab, setActiveTab] = useState<'documents' | 'upload' | 'faqs'>('documents');
+  
+  // FAQ相关状态
+  const [showCreateFAQForm, setShowCreateFAQForm] = useState(false);
+  const [showEditFAQForm, setShowEditFAQForm] = useState(false);
+  const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
 
   const handleSelectKb = (kb: KnowledgeBase) => {
     setSelectedKb(kb);
@@ -39,6 +44,35 @@ export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboar
   const handleEditCancel = () => {
     setShowEditForm(false);
     setEditingKb(null);
+  };
+
+  // FAQ相关处理函数
+  const handleCreateFAQSuccess = () => {
+    setShowCreateFAQForm(false);
+    // 创建成功后确保用户能看到新创建的FAQ
+    console.log('FAQ创建成功，切换回列表视图');
+  };
+
+  const handleCreateFAQCancel = () => {
+    setShowCreateFAQForm(false);
+  };
+
+  const handleEditFAQSuccess = () => {
+    setShowEditFAQForm(false);
+    setEditingFAQ(null);
+    // 编辑成功后确保用户能看到更新后的FAQ
+    console.log('FAQ编辑成功，切换回列表视图');
+  };
+
+  const handleEditFAQCancel = () => {
+    setShowEditFAQForm(false);
+    setEditingFAQ(null);
+  };
+
+  const handleEditFAQ = (faq: FAQ) => {
+    setEditingFAQ(faq);
+    setShowEditFAQForm(true);
+    setShowCreateFAQForm(false);
   };
 
   return (
@@ -100,7 +134,6 @@ export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboar
                     <h2 className="text-xl font-semibold text-gray-900">
                       {selectedKb.kbName}
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">ID: {selectedKb.kbId}</p>
                     {selectedKb.createTime && (
                       <p className="text-xs text-gray-400 mt-1">
                         创建时间: {new Date(selectedKb.createTime).toLocaleString()}
@@ -141,6 +174,20 @@ export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboar
                   >
                     上传文档
                   </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab('faqs');
+                      setShowCreateFAQForm(false);
+                      setShowEditFAQForm(false);
+                    }}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'faqs'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    问答管理
+                  </button>
                 </nav>
               </div>
 
@@ -165,6 +212,40 @@ export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboar
                       setActiveTab('documents');
                     }}
                   />
+                )}
+
+                {activeTab === 'faqs' && (
+                  <>
+                    {showCreateFAQForm ? (
+                      <CreateFAQForm
+                        apiKey={apiKey}
+                        kbId={selectedKb.kbId}
+                        onSuccess={handleCreateFAQSuccess}
+                        onCancel={handleCreateFAQCancel}
+                      />
+                    ) : showEditFAQForm && editingFAQ ? (
+                      <EditFAQForm
+                        apiKey={apiKey}
+                        kbId={selectedKb.kbId}
+                        faq={editingFAQ}
+                        onSuccess={handleEditFAQSuccess}
+                        onCancel={handleEditFAQCancel}
+                      />
+                    ) : (
+                      <FAQList
+                        apiKey={apiKey}
+                        kbId={selectedKb.kbId}
+                        onCreateFAQ={() => {
+                          setShowCreateFAQForm(true);
+                          setShowEditFAQForm(false);
+                        }}
+                        onEditFAQ={handleEditFAQ}
+                        onDeleteSuccess={() => {
+                          // FAQ删除成功后的处理
+                        }}
+                      />
+                    )}
+                  </>
                 )}
               </div>
             </div>

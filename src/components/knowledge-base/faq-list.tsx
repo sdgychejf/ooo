@@ -32,6 +32,7 @@ export default function FAQList({
 
   useEffect(() => {
     if (kbId) {
+      console.log('FAQList: 开始获取FAQ列表, kbId:', kbId);
       fetchFAQList(kbId);
     }
   }, [kbId, fetchFAQList]);
@@ -79,6 +80,8 @@ export default function FAQList({
       }
     }
   };
+
+  console.log('FAQList render: loading=', loading, 'faqs.length=', faqs.length, 'error=', error);
 
   if (loading && faqs.length === 0) {
     return (

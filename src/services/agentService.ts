@@ -36,7 +36,8 @@ class AgentService {
       }
 
       const data = await response.json();
-      return { success: true, data };
+      // API返回格式为 {result: [...]}，提取result字段
+      return { success: true, data: data.result || data };
     } catch (error) {
       console.error('API request failed:', error);
       return {

@@ -6,6 +6,8 @@ import { agentService } from "@/services/agentService";
 import { AgentList } from "./agent-list";
 import { AgentForm } from "./agent-form";
 import { AgentDetail } from "./agent-detail";
+import { useToast } from "@/hooks/useToast";
+import { ToastContainer } from "@/components/ui/toast";
 
 type ViewMode = "list" | "create" | "edit" | "detail";
 
@@ -18,6 +20,7 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const { toasts, removeToast, showSuccess, showError } = useToast();
 
   useEffect(() => {
     if (apiKey) {
@@ -37,12 +40,12 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
       } else {
         console.error("Failed to load agents:", response.error);
         setAgents([]); // 设置为空数组
-        alert(`加载Agent列表失败: ${response.error}`);
+        showError(`加载Agent列表失败: ${response.error}`);
       }
     } catch (error) {
       console.error("Error loading agents:", error);
       setAgents([]); // 设置为空数组
-      alert("加载Agent列表时发生错误");
+      showError("加载Agent列表时发生错误");
     } finally {
       setLoading(false);
     }
@@ -52,15 +55,15 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
     try {
       const response = await agentService.createAgent(agentData);
       if (response.success) {
-        alert("Agent创建成功");
+        showSuccess("Agent创建成功");
         setViewMode("list");
         loadAgents();
       } else {
-        alert(`创建Agent失败: ${response.error}`);
+        showError(`创建Agent失败: ${response.error}`);
       }
     } catch (error) {
       console.error("Error creating agent:", error);
-      alert("创建Agent时发生错误");
+      showError("创建Agent时发生错误");
     }
   };
 
@@ -68,16 +71,16 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
     try {
       const response = await agentService.updateAgent(agentData);
       if (response.success) {
-        alert("Agent更新成功");
+        showSuccess("Agent更新成功");
         setViewMode("list");
         setSelectedAgent(null);
         loadAgents();
       } else {
-        alert(`更新Agent失败: ${response.error}`);
+        showError(`更新Agent失败: ${response.error}`);
       }
     } catch (error) {
       console.error("Error updating agent:", error);
-      alert("更新Agent时发生错误");
+      showError("更新Agent时发生错误");
     }
   };
 
@@ -89,14 +92,14 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
     try {
       const response = await agentService.deleteAgent({ uuid });
       if (response.success) {
-        alert("Agent删除成功");
+        showSuccess("Agent删除成功");
         loadAgents();
       } else {
-        alert(`删除Agent失败: ${response.error}`);
+        showError(`删除Agent失败: ${response.error}`);
       }
     } catch (error) {
       console.error("Error deleting agent:", error);
-      alert("删除Agent时发生错误");
+      showError("删除Agent时发生错误");
     }
   };
 
@@ -107,11 +110,11 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
         setSelectedAgent(response.data);
         setViewMode("detail");
       } else {
-        alert(`获取Agent详情失败: ${response.error}`);
+        showError(`获取Agent详情失败: ${response.error}`);
       }
     } catch (error) {
       console.error("Error getting agent detail:", error);
-      alert("获取Agent详情时发生错误");
+      showError("获取Agent详情时发生错误");
     }
   };
 
@@ -132,7 +135,9 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
+      <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Agent管理</h1>
         <div className="flex gap-2">
@@ -197,6 +202,7 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
           onEdit={handleEditAgent}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }

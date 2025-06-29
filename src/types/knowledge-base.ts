@@ -101,7 +101,10 @@ export interface KbListResponse extends Array<KnowledgeBase> {}
 // QAnything API 中，文件列表和FAQ列表都直接作为数组返回在 result 字段中
 export interface FileListResponse extends Array<Document> {}
 
-export interface FAQListResponse extends Array<FAQ> {}
+export interface FAQListResponse {
+  faqList: FAQ[];
+  total: number;
+}
 
 // FAQ详情直接返回FAQ对象在 result 字段中
 export interface FAQDetailResponse extends FAQ {}

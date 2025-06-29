@@ -1,14 +1,17 @@
 export interface Agent {
-  uuid?: string;
-  botName: string;
-  botDescription: string;
+  uuid: string;
+  name: string;
+  description: string;
   model: string;
-  maxToken: string;
-  hybridSearch: string;
-  networking: string;
-  needSource: string;
-  botPromptSetting?: string;
+  maxToken: number;
+  hybridSearch: boolean;
+  networking: boolean;
+  needSource: boolean;
+  promptSetting?: string;
   welcomeMessage?: string;
+  contextLength: number;
+  rerankTopK: number;
+  rerankScore: string;
   kbIds?: string[];
 }
 
@@ -27,13 +30,13 @@ export interface CreateAgentRequest {
 
 export interface UpdateAgentRequest {
   uuid: string;
-  botName: string;
-  botDescription: string;
-  model: string;
-  maxToken: string;
-  hybridSearch: string;
-  networking: string;
-  needSource: string;
+  botName?: string;
+  botDescription?: string;
+  model?: string;
+  maxToken?: string;
+  hybridSearch?: string;
+  networking?: string;
+  needSource?: string;
   botPromptSetting?: string;
   welcomeMessage?: string;
 }

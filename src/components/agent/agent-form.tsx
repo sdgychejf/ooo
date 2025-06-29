@@ -1,47 +1,77 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Agent, CreateAgentRequest, UpdateAgentRequest } from '@/types/agent';
+import { useState } from "react";
+import { Agent, CreateAgentRequest, UpdateAgentRequest } from "@/types/agent";
 
 interface AgentFormProps {
   agent?: Agent;
-  onSubmit: (data: CreateAgentRequest | UpdateAgentRequest) => void;
+  onSubmit: (data: any) => Promise<void> | void;
   onCancel: () => void;
   isEditing?: boolean;
 }
 
-export function AgentForm({ agent, onSubmit, onCancel, isEditing = false }: AgentFormProps) {
+export function AgentForm({
+  agent,
+  onSubmit,
+  onCancel,
+  isEditing = false,
+}: AgentFormProps) {
   const [formData, setFormData] = useState({
-    botName: agent?.botName || '',
-    botDescription: agent?.botDescription || '',
-    model: agent?.model || 'QAnything 4o mini',
-    maxToken: agent?.maxToken || '1024',
-    hybridSearch: agent?.hybridSearch || 'false',
-    networking: agent?.networking || 'true',
-    needSource: agent?.needSource || 'true',
-    botPromptSetting: agent?.botPromptSetting || '',
-    welcomeMessage: agent?.welcomeMessage || '',
-    kbIds: agent?.kbIds?.join(',') || '',
+    botName: agent?.name || "",
+    botDescription: agent?.description || "",
+    model: agent?.model || "QAnything 4o mini",
+    maxToken: agent?.maxToken?.toString() || "1024",
+    hybridSearch: agent?.hybridSearch?.toString() || "false",
+    networking: agent?.networking?.toString() || "true",
+    needSource: agent?.needSource?.toString() || "true",
+    botPromptSetting: agent?.promptSetting || "",
+    welcomeMessage: agent?.welcomeMessage || "",
+    kbIds: agent?.kbIds?.join(",") || "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const kbIdsArray = formData.kbIds.split(',').filter(id => id.trim()).map(id => id.trim());
-    
+
+    const kbIdsArray = formData.kbIds
+      .split(",")
+      .filter((id) => id.trim())
+      .map((id) => id.trim());
+
     if (isEditing && agent?.uuid) {
+      // 只发送有变更的字段
       const updateData: UpdateAgentRequest = {
         uuid: agent.uuid,
-        botName: formData.botName,
-        botDescription: formData.botDescription,
-        model: formData.model,
-        maxToken: formData.maxToken,
-        hybridSearch: formData.hybridSearch,
-        networking: formData.networking,
-        needSource: formData.needSource,
-        botPromptSetting: formData.botPromptSetting,
-        welcomeMessage: formData.welcomeMessage,
       };
+      
+      // 比较并添加变更的字段
+      if (formData.botName !== agent.name) {
+        updateData.botName = formData.botName;
+      }
+      if (formData.botDescription !== agent.description) {
+        updateData.botDescription = formData.botDescription;
+      }
+      if (formData.model !== agent.model) {
+        updateData.model = formData.model;
+      }
+      if (formData.maxToken !== agent.maxToken.toString()) {
+        updateData.maxToken = formData.maxToken;
+      }
+      if (formData.hybridSearch !== agent.hybridSearch.toString()) {
+        updateData.hybridSearch = formData.hybridSearch;
+      }
+      if (formData.networking !== agent.networking.toString()) {
+        updateData.networking = formData.networking;
+      }
+      if (formData.needSource !== agent.needSource.toString()) {
+        updateData.needSource = formData.needSource;
+      }
+      if (formData.botPromptSetting !== (agent.promptSetting || "")) {
+        updateData.botPromptSetting = formData.botPromptSetting;
+      }
+      if (formData.welcomeMessage !== (agent.welcomeMessage || "")) {
+        updateData.welcomeMessage = formData.welcomeMessage;
+      }
+      
       onSubmit(updateData);
     } else {
       const createData: CreateAgentRequest = {
@@ -60,20 +90,24 @@ export function AgentForm({ agent, onSubmit, onCancel, isEditing = false }: Agen
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   return (
     <div className="bg-white p-6 rounded-lg border">
       <h2 className="text-xl font-semibold mb-4">
-        {isEditing ? '编辑Agent' : '创建Agent'}
+        {isEditing ? "编辑Agent" : "创建Agent"}
       </h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -235,7 +269,7 @@ export function AgentForm({ agent, onSubmit, onCancel, isEditing = false }: Agen
             type="submit"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {isEditing ? '更新Agent' : '创建Agent'}
+            {isEditing ? "更新Agent" : "创建Agent"}
           </button>
           <button
             type="button"

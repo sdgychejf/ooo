@@ -127,20 +127,32 @@ export function AgentDetail({ agent, onClose, onEdit, onManageKnowledgeBases }: 
           </div>
         )}
 
-        {agent.kbIds && agent.kbIds.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              绑定的知识库
-            </label>
-            <div className="p-2 bg-gray-50 rounded">
-              {agent.kbIds.map((kbId, index) => (
-                <div key={index} className="font-mono text-sm text-gray-600">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            绑定的知识库
+          </label>
+          <div className="p-2 bg-gray-50 rounded">
+            {agent.kbBindList && agent.kbBindList.length > 0 ? (
+              agent.kbBindList.map((kb, index) => (
+                <div key={index} className="mb-2 p-2 bg-white rounded border">
+                  <div className="font-medium text-gray-900">{kb.kbName}</div>
+                  <div className="font-mono text-sm text-gray-600">{kb.kbId}</div>
+                </div>
+              ))
+            ) : (agent.kbIds && agent.kbIds.length > 0) ? (
+              // 向后兼容：如果只有kbIds数组
+              agent.kbIds.map((kbId, index) => (
+                <div key={index} className="font-mono text-sm text-gray-600 mb-1">
                   {kbId}
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div className="text-sm text-gray-500 italic">
+                暂无绑定的知识库
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -18,7 +18,15 @@ export function AgentKbBinding({ agent, apiKey, onClose, onSuccess }: AgentKbBin
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
   const [loading, setLoading] = useState(true);
   const [bindLoading, setBidnLoading] = useState(false);
-  const [selectedKbIds, setSelectedKbIds] = useState<string[]>(agent.kbIds || []);
+  // 从kbBindList或kbIds中提取当前绑定的知识库ID列表
+  const getCurrentKbIds = () => {
+    if (agent.kbBindList && agent.kbBindList.length > 0) {
+      return agent.kbBindList.map(kb => kb.kbId);
+    }
+    return agent.kbIds || [];
+  };
+
+  const [selectedKbIds, setSelectedKbIds] = useState<string[]>(getCurrentKbIds());
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
@@ -61,7 +69,7 @@ export function AgentKbBinding({ agent, apiKey, onClose, onSuccess }: AgentKbBin
   const handleSave = async () => {
     setBidnLoading(true);
     try {
-      const currentKbIds = agent.kbIds || [];
+      const currentKbIds = getCurrentKbIds();
       const toAdd = selectedKbIds.filter(id => !currentKbIds.includes(id));
       const toRemove = currentKbIds.filter(id => !selectedKbIds.includes(id));
 

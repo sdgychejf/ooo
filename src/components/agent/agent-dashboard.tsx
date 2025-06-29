@@ -215,11 +215,23 @@ export function AgentDashboard({ apiKey }: AgentDashboardProps) {
           agent={selectedAgent}
           apiKey={apiKey}
           onClose={() => {
-            setViewMode("list");
-            setSelectedAgent(null);
+            setViewMode("detail");
           }}
-          onSuccess={() => {
-            loadAgents();
+          onSuccess={async () => {
+            await loadAgents();
+            // 重新获取当前Agent的详情以显示最新的绑定状态
+            if (selectedAgent) {
+              try {
+                const response = await agentService.getAgentDetail(selectedAgent.uuid);
+                if (response.success && response.data) {
+                  setSelectedAgent(response.data);
+                  setViewMode("detail");
+                }
+              } catch (error) {
+                console.error("Error refreshing agent detail:", error);
+                setViewMode("detail");
+              }
+            }
           }}
         />
       )}

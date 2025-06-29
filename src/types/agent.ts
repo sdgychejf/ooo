@@ -1,3 +1,8 @@
+export interface KnowledgeBaseBinding {
+  kbId: string;
+  kbName: string;
+}
+
 export interface Agent {
   uuid: string;
   name: string;
@@ -12,7 +17,8 @@ export interface Agent {
   contextLength: number;
   rerankTopK: number;
   rerankScore: string;
-  kbIds?: string[];
+  kbIds?: string[]; // 保留向后兼容
+  kbBindList?: KnowledgeBaseBinding[]; // API实际返回的字段
 }
 
 export interface CreateAgentRequest {

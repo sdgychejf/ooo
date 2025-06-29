@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { chatService, ChatMessage, KnowledgeBaseChatRequest, AgentChatRequest } from '@/services/chatService';
 import { useToast } from '@/hooks/useToast';
 
@@ -70,11 +71,23 @@ export function ChatInterface({
         };
 
         for await (const chunk of chatService.chatWithKnowledgeBase(request)) {
-          console.log('Received chunk:', chunk);
+          console.log('Received chunk response:', chunk.result?.response);
           if (chunk.errorCode === '0' && chunk.result?.response) {
             const newText = chunk.result.response;
+            
+            // 检查是否是完整响应（避免重复）
+            if (newText === fullResponse) {
+              console.log('Skipping duplicate complete response');
+              continue;
+            }
+            
             fullResponse += newText;
-            setCurrentResponse(fullResponse);
+            console.log('Current full response:', fullResponse);
+            
+            // 使用flushSync确保立即渲染
+            flushSync(() => {
+              setCurrentResponse(fullResponse);
+            });
           } else if (chunk.errorCode !== '0') {
             showError(`聊天失败: ${chunk.msg || '未知错误'}`);
             break;
@@ -89,11 +102,23 @@ export function ChatInterface({
         };
 
         for await (const chunk of chatService.chatWithAgent(request)) {
-          console.log('Received chunk:', chunk);
+          console.log('Received chunk response:', chunk.result?.response);
           if (chunk.errorCode === '0' && chunk.result?.response) {
             const newText = chunk.result.response;
+            
+            // 检查是否是完整响应（避免重复）
+            if (newText === fullResponse) {
+              console.log('Skipping duplicate complete response');
+              continue;
+            }
+            
             fullResponse += newText;
-            setCurrentResponse(fullResponse);
+            console.log('Current full response:', fullResponse);
+            
+            // 使用flushSync确保立即渲染
+            flushSync(() => {
+              setCurrentResponse(fullResponse);
+            });
           } else if (chunk.errorCode !== '0') {
             showError(`聊天失败: ${chunk.msg || '未知错误'}`);
             break;

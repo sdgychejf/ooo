@@ -177,48 +177,25 @@ interface WakaTimeUser {
 }
 
 export class WakaTimeClient {
-  private baseUrl = 'https://wakatime.com/api/v1';
-  private apiKey = '';
-
-  constructor(apiKey?: string) {
-    if (apiKey) {
-      this.apiKey = apiKey;
-    }
-  }
-
-  setApiKey(apiKey: string) {
-    this.apiKey = apiKey;
-  }
+  private baseUrl = '/api/wakatime';
 
   private async request<T>(endpoint: string): Promise<T> {
-    if (!this.apiKey) {
-      throw new Error('WakaTime API key is required');
-    }
-
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(`${this.baseUrl}${endpoint}`);
 
     if (!response.ok) {
-      throw new Error(`WakaTime API error: ${response.status} ${response.statusText}`);
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(error.error || `API error: ${response.status} ${response.statusText}`);
     }
 
     return response.json();
   }
 
   async getCurrentUser(): Promise<WakaTimeUser> {
-    return this.request<WakaTimeUser>('/users/current');
+    return this.request<WakaTimeUser>('/user');
   }
 
   async getStats(range: 'last_7_days' | 'last_30_days' | 'last_6_months' | 'last_year' = 'last_7_days'): Promise<WakaTimeStats> {
-    return this.request<WakaTimeStats>(`/users/current/stats/${range}`);
-  }
-
-  async getAllTimeStats(): Promise<WakaTimeStats> {
-    return this.request<WakaTimeStats>('/users/current/all_time_since_today');
+    return this.request<WakaTimeStats>(`/stats/${range}`);
   }
 }
 

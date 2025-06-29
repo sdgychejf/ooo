@@ -24,18 +24,6 @@ export function WakaTimeStatsClient() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const apiKey = process.env.NEXT_PUBLIC_WAKATIME_API_KEY;
-        if (!apiKey || apiKey === 'your-wakatime-api-key-here') {
-          setStats(prev => ({ 
-            ...prev, 
-            isLoading: false, 
-            error: 'WakaTime API key not configured' 
-          }));
-          return;
-        }
-
-        wakaTimeClient.setApiKey(apiKey);
-        
         const [userResponse, statsResponse] = await Promise.all([
           wakaTimeClient.getCurrentUser(),
           wakaTimeClient.getStats('last_7_days')
@@ -87,8 +75,21 @@ export function WakaTimeStatsClient() {
     return (
       <div className="border-t border-gray-200 bg-gray-50 py-4">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-2">
             <div className="text-sm text-gray-400">{stats.error}</div>
+            {stats.error.includes('API key') && (
+              <div className="text-xs text-gray-400">
+                Get your WakaTime API key at{' '}
+                <a 
+                  href="https://wakatime.com/api-key" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  wakatime.com/api-key
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

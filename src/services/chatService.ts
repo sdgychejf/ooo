@@ -25,9 +25,10 @@ export interface AgentChatRequest {
 }
 
 export interface ChatStreamChunk {
+  success?: boolean;
   errorCode: string;
   msg: string;
-  requestId: string;
+  requestId?: string;
   result?: {
     qaId: number;
     singleQAId: number | null;
@@ -146,16 +147,16 @@ class ChatService {
   // 非流式聊天方法，用于兼容
   async chatWithKnowledgeBaseSync(
     request: KnowledgeBaseChatRequest
-  ): Promise<ApiResponse<{ response: string; sources?: any[] }>> {
+  ): Promise<ApiResponse<{ response: string; source?: any[] }>> {
     try {
       let fullResponse = '';
-      let sources: any[] = [];
+      let source: any[] = [];
 
       for await (const chunk of this.chatWithKnowledgeBase(request)) {
         if (chunk.success && chunk.result) {
           fullResponse += chunk.result.response || '';
-          if (chunk.result.sources) {
-            sources = chunk.result.sources;
+          if (chunk.result.source) {
+            source = chunk.result.source;
           }
         } else if (!chunk.success) {
           return {
@@ -167,7 +168,7 @@ class ChatService {
 
       return {
         success: true,
-        data: { response: fullResponse, sources }
+        data: { response: fullResponse, source }
       };
     } catch (error) {
       return {
@@ -179,16 +180,16 @@ class ChatService {
 
   async chatWithAgentSync(
     request: AgentChatRequest
-  ): Promise<ApiResponse<{ response: string; sources?: any[] }>> {
+  ): Promise<ApiResponse<{ response: string; source?: any[] }>> {
     try {
       let fullResponse = '';
-      let sources: any[] = [];
+      let source: any[] = [];
 
       for await (const chunk of this.chatWithAgent(request)) {
         if (chunk.success && chunk.result) {
           fullResponse += chunk.result.response || '';
-          if (chunk.result.sources) {
-            sources = chunk.result.sources;
+          if (chunk.result.source) {
+            source = chunk.result.source;
           }
         } else if (!chunk.success) {
           return {
@@ -200,7 +201,7 @@ class ChatService {
 
       return {
         success: true,
-        data: { response: fullResponse, sources }
+        data: { response: fullResponse, source }
       };
     } catch (error) {
       return {

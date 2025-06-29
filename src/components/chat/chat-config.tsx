@@ -1,365 +1,262 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { KnowledgeBaseChatRequest, AgentChatRequest } from "@/types/chat";
-import { useKnowledgeBase } from "@/hooks/use-knowledge-base";
+import { useState, useEffect } from 'react';
+import { KnowledgeBase } from '@/types/knowledge-base';
+import { Agent } from '@/types/agent';
+import { KnowledgeBaseClient } from '@/lib/knowledge-base-client';
+import { agentService } from '@/services/agentService';
 
 interface ChatConfigProps {
-  onConfigChange: (
-    config: Partial<KnowledgeBaseChatRequest> | Partial<AgentChatRequest>,
-    type: "kb" | "agent"
-  ) => void;
-  disabled?: boolean;
-  apiKey?: string;
+  apiKey: string;
+  onConfigChange: (config: ChatConfig) => void;
 }
 
-export function ChatConfig({
-  onConfigChange,
-  disabled = false,
-  apiKey = "",
-}: ChatConfigProps) {
-  const [chatType, setChatType] = useState<"kb" | "agent">("kb");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [config, setConfig] = useState<{
-    // Knowledge Base Config
-    kbIds: string[];
-    prompt: string;
-    model: string;
-    maxToken: string;
-    hybridSearch: string;
-    networking: string;
-    sourceNeeded: string;
-    // Agent Config
-    uuid: string;
-  }>({
-    kbIds: [],
-    prompt: "",
-    model: "QAnything 4o mini",
-    maxToken: "1024",
-    hybridSearch: "false",
-    networking: "true",
-    sourceNeeded: "true",
-    uuid: "",
-  });
+export interface ChatConfig {
+  mode: 'knowledge-base' | 'agent';
+  kbIds: string[];
+  agentUuid: string;
+  model: string;
+  maxToken: string;
+  hybridSearch: boolean;
+  networking: boolean;
+  sourceNeeded: boolean;
+}
 
-  const { knowledgeBases, fetchKnowledgeBaseList, loading, error } =
-    useKnowledgeBase(apiKey);
+export function ChatConfig({ apiKey, onConfigChange }: ChatConfigProps) {
+  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [config, setConfig] = useState<ChatConfig>({
+    mode: 'knowledge-base',
+    kbIds: [],
+    agentUuid: '',
+    model: 'QAnything 4o mini',
+    maxToken: '1024',
+    hybridSearch: false,
+    networking: true,
+    sourceNeeded: true,
+  });
+  const [loading, setLoading] = useState(true);
+  const [knowledgeBaseClient, setKnowledgeBaseClient] = useState<KnowledgeBaseClient | null>(null);
 
   useEffect(() => {
-    if (apiKey) {
-      fetchKnowledgeBaseList().catch(console.error);
-    }
-  }, [apiKey, fetchKnowledgeBaseList]);
+    const initData = async () => {
+      if (!apiKey) return;
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setConfig((prev) => ({ ...prev, [name]: value }));
-    handleChatTypeChange(chatType);
+      try {
+        setLoading(true);
+        const client = new KnowledgeBaseClient(apiKey);
+        setKnowledgeBaseClient(client);
+        agentService.setApiKey(apiKey);
+
+        const [kbResponse, agentResponse] = await Promise.all([
+          client.getKnowledgeBaseList(),
+          agentService.getAgentList()
+        ]);
+
+        if (kbResponse.result) {
+          setKnowledgeBases(kbResponse.result || []);
+        }
+
+        if (agentResponse.success) {
+          setAgents(agentResponse.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initData();
+  }, [apiKey]);
+
+  useEffect(() => {
+    onConfigChange(config);
+  }, [config, onConfigChange]);
+
+  const handleConfigChange = (updates: Partial<ChatConfig>) => {
+    setConfig(prev => ({ ...prev, ...updates }));
   };
 
-  const handleKbIdsChange = (kbId: string) => {
-    setConfig((prev) => {
-      const newKbIds = prev.kbIds.includes(kbId)
-        ? prev.kbIds.filter((id) => id !== kbId)
-        : [...prev.kbIds, kbId];
-      return { ...prev, kbIds: newKbIds };
-    });
+  const handleKbToggle = (kbId: string) => {
+    setConfig(prev => ({
+      ...prev,
+      kbIds: prev.kbIds.includes(kbId)
+        ? prev.kbIds.filter(id => id !== kbId)
+        : [...prev.kbIds, kbId]
+    }));
   };
 
-  const handleChatTypeChange = (type: "kb" | "agent") => {
-    setChatType(type);
-
-    if (type === "kb") {
-      const kbConfig: Partial<KnowledgeBaseChatRequest> = {
-        kbIds: config.kbIds,
-        prompt: config.prompt,
-        model: config.model,
-        maxToken: config.maxToken || "1024",
-        hybridSearch: config.hybridSearch || "false",
-        networking: config.networking || "true",
-        sourceNeeded: config.sourceNeeded || "true",
-      };
-      onConfigChange(kbConfig, "kb");
-    } else {
-      const agentConfig: Partial<AgentChatRequest> = {
-        uuid: config.uuid,
-        sourceNeeded: config.sourceNeeded || "true",
-      };
-      onConfigChange(agentConfig, "agent");
-    }
-  };
-
-  const handleApplyConfig = () => {
-    handleChatTypeChange(chatType);
-  };
-
-  const filteredKnowledgeBases = searchQuery
-    ? knowledgeBases.filter(
-        (kb) =>
-          kb.kbName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          kb.kbId.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : knowledgeBases;
+  if (loading) {
+    return (
+      <div className="p-4 bg-gray-50 rounded-lg">
+        <div className="animate-pulse">加载配置中...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white p-4 rounded-lg border space-y-4">
+    <div className="space-y-6 p-4 bg-gray-50 rounded-lg">
       <h3 className="text-lg font-semibold">聊天配置</h3>
 
-      {/* Chat Type Selection */}
+      {/* Mode Selection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          聊天类型
+          对话模式
         </label>
-        <div className="flex gap-4">
+        <div className="flex space-x-4">
           <label className="flex items-center">
             <input
               type="radio"
-              name="chatType"
-              value="kb"
-              checked={chatType === "kb"}
-              onChange={() => setChatType("kb")}
-              disabled={disabled}
+              value="knowledge-base"
+              checked={config.mode === 'knowledge-base'}
+              onChange={(e) => handleConfigChange({ mode: e.target.value as 'knowledge-base' })}
               className="mr-2"
             />
-            知识库问答
+            知识库对话
           </label>
           <label className="flex items-center">
             <input
               type="radio"
-              name="chatType"
               value="agent"
-              checked={chatType === "agent"}
-              onChange={() => setChatType("agent")}
-              disabled={disabled}
+              checked={config.mode === 'agent'}
+              onChange={(e) => handleConfigChange({ mode: e.target.value as 'agent' })}
               className="mr-2"
             />
-            Agent问答
+            Agent对话
           </label>
         </div>
       </div>
 
-      {/* Knowledge Base Config */}
-      {chatType === "kb" && (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              选择知识库 *
-            </label>
-            {error ? (
-              <div className="text-red-500 text-sm mb-2">{error}</div>
-            ) : (
-              <div className="relative">
+      {/* Knowledge Base Selection */}
+      {config.mode === 'knowledge-base' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            选择知识库 ({config.kbIds.length} 个已选择)
+          </label>
+          <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-md p-2 space-y-2">
+            {knowledgeBases.map((kb) => (
+              <label key={kb.kbId} className="flex items-center">
                 <input
-                  type="text"
-                  placeholder="搜索知识库..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  disabled={disabled || loading}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                  type="checkbox"
+                  checked={config.kbIds.includes(kb.kbId)}
+                  onChange={() => handleKbToggle(kb.kbId)}
+                  className="mr-2"
                 />
-                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md">
-                  {loading ? (
-                    <div className="text-center py-4 text-gray-500">
-                      加载中...
-                    </div>
-                  ) : filteredKnowledgeBases.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500">
-                      {searchQuery ? "未找到匹配的知识库" : "暂无知识库"}
-                    </div>
-                  ) : (
-                    filteredKnowledgeBases.map((kb) => (
-                      <div
-                        key={kb.kbId}
-                        className={`flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50 ${
-                          config.kbIds.includes(kb.kbId) ? "bg-blue-50" : ""
-                        }`}
-                        onClick={() => !disabled && handleKbIdsChange(kb.kbId)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={config.kbIds.includes(kb.kbId)}
-                          onChange={() => {}}
-                          className="mr-3"
-                        />
-                        <div>
-                          <div className="font-medium">{kb.kbName}</div>
-                          <div className="text-sm text-gray-500">{kb.kbId}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                {config.kbIds.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {config.kbIds.map((kbId) => {
-                      const kb = knowledgeBases.find((k) => k.kbId === kbId);
-                      return (
-                        <span
-                          key={kbId}
-                          className="inline-flex items-center px-2 py-1 rounded-md text-sm bg-blue-100 text-blue-800"
-                        >
-                          {kb?.kbName || kbId}
-                          <button
-                            onClick={() => !disabled && handleKbIdsChange(kbId)}
-                            className="ml-1 hover:text-blue-600"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-            {!apiKey && (
-              <div className="text-yellow-500 text-sm mt-1">
-                请先配置 API Key
-              </div>
-            )}
+                <span className="text-sm">{kb.kbName}</span>
+              </label>
+            ))}
           </div>
+          {knowledgeBases.length === 0 && (
+            <p className="text-sm text-gray-500">暂无知识库</p>
+          )}
+        </div>
+      )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              自定义提示词
-            </label>
-            <textarea
-              name="prompt"
-              value={config.prompt}
-              onChange={handleInputChange}
-              disabled={disabled}
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+      {/* Agent Selection */}
+      {config.mode === 'agent' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            选择Agent
+          </label>
+          <select
+            value={config.agentUuid}
+            onChange={(e) => handleConfigChange({ agentUuid: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">请选择Agent</option>
+            {agents.map((agent) => (
+              <option key={agent.uuid} value={agent.uuid}>
+                {agent.name}
+              </option>
+            ))}
+          </select>
+          {agents.length === 0 && (
+            <p className="text-sm text-gray-500 mt-1">暂无Agent</p>
+          )}
+        </div>
+      )}
 
+      {/* Knowledge Base Settings */}
+      {config.mode === 'knowledge-base' && (
+        <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              模型 *
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              模型
             </label>
             <select
-              name="model"
               value={config.model}
-              onChange={handleInputChange}
-              disabled={disabled}
+              onChange={(e) => handleConfigChange({ model: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="QAnything 4o mini">QAnything 4o mini</option>
-              <option value="QAnything 4o">QAnything 4o</option>
+              <option value="deepseek-lite">DeepSeek Lite</option>
+              <option value="deepseek-pro">DeepSeek Pro</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              最大Token数 *
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              最大Token数
             </label>
             <input
-              type="text"
-              name="maxToken"
+              type="number"
               value={config.maxToken}
-              onChange={handleInputChange}
-              disabled={disabled}
+              onChange={(e) => handleConfigChange({ maxToken: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              min="1"
+              max="4096"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              混合搜索 *
+          <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={config.hybridSearch}
+                onChange={(e) => handleConfigChange({ hybridSearch: e.target.checked })}
+                className="mr-2"
+              />
+              启用混合搜索
             </label>
-            <select
-              name="hybridSearch"
-              value={config.hybridSearch}
-              onChange={handleInputChange}
-              disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="false">否</option>
-              <option value="true">是</option>
-            </select>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              联网搜索 *
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={config.networking}
+                onChange={(e) => handleConfigChange({ networking: e.target.checked })}
+                className="mr-2"
+              />
+              启用网络搜索
             </label>
-            <select
-              name="networking"
-              value={config.networking}
-              onChange={handleInputChange}
-              disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="false">否</option>
-              <option value="true">是</option>
-            </select>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              返回来源 *
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={config.sourceNeeded}
+                onChange={(e) => handleConfigChange({ sourceNeeded: e.target.checked })}
+                className="mr-2"
+              />
+              显示来源信息
             </label>
-            <select
-              name="sourceNeeded"
-              value={config.sourceNeeded}
-              onChange={handleInputChange}
-              disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="false">否</option>
-              <option value="true">是</option>
-            </select>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Agent Config */}
-      {chatType === "agent" && (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Agent UUID *
-            </label>
+      {/* Agent Settings */}
+      {config.mode === 'agent' && (
+        <div>
+          <label className="flex items-center">
             <input
-              type="text"
-              name="uuid"
-              value={config.uuid}
-              onChange={handleInputChange}
-              disabled={disabled}
-              placeholder="C1BDCFC4F33747E7"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="checkbox"
+              checked={config.sourceNeeded}
+              onChange={(e) => handleConfigChange({ sourceNeeded: e.target.checked })}
+              className="mr-2"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              需要来源
-            </label>
-            <select
-              name="sourceNeeded"
-              value={config.sourceNeeded}
-              onChange={handleInputChange}
-              disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="false">不需要</option>
-              <option value="true">需要</option>
-            </select>
-          </div>
+            显示来源信息
+          </label>
         </div>
       )}
-
-      <button
-        onClick={handleApplyConfig}
-        disabled={disabled}
-        className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        应用配置
-      </button>
     </div>
   );
 }

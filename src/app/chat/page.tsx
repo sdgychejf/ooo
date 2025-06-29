@@ -1,3 +1,5 @@
+"use client";
+
 import { ChatDashboard } from "@/components/chat";
 
 export default function ChatPage() {
@@ -10,7 +12,3 @@ export default function ChatPage() {
   );
 }
 
-export const metadata = {
-  title: "对话 - QAnything",
-  description: "与您的知识库和Agent进行对话",
-};

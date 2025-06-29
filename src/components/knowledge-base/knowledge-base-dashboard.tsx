@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { KnowledgeBaseList, CreateKnowledgeBaseForm, FileUpload, DocumentList } from './index';
+import EditKnowledgeBaseForm from './edit-knowledge-base-form';
 import type { KnowledgeBase } from '@/types/knowledge-base';
 
 interface KnowledgeBaseDashboardProps {
@@ -11,6 +12,8 @@ interface KnowledgeBaseDashboardProps {
 export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboardProps) {
   const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingKb, setEditingKb] = useState<KnowledgeBase | null>(null);
   const [activeTab, setActiveTab] = useState<'documents' | 'upload'>('documents');
 
   const handleSelectKb = (kb: KnowledgeBase) => {
@@ -25,6 +28,17 @@ export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboar
 
   const handleCreateCancel = () => {
     setShowCreateForm(false);
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditForm(false);
+    setEditingKb(null);
+    // 刷新会自动发生，因为 hook 中调用了 fetchKnowledgeBaseList
+  };
+
+  const handleEditCancel = () => {
+    setShowEditForm(false);
+    setEditingKb(null);
   };
 
   return (
@@ -44,11 +58,21 @@ export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboar
                 onSuccess={handleCreateSuccess}
                 onCancel={handleCreateCancel}
               />
+            ) : showEditForm && editingKb ? (
+              <EditKnowledgeBaseForm
+                apiKey={apiKey}
+                knowledgeBase={editingKb}
+                onSuccess={handleEditSuccess}
+                onCancel={handleEditCancel}
+              />
             ) : (
               <KnowledgeBaseList
                 apiKey={apiKey}
                 onSelectKb={handleSelectKb}
-                onCreateKb={() => setShowCreateForm(true)}
+                onCreateKb={() => {
+                  setShowCreateForm(true);
+                  setShowEditForm(false); // 确保编辑表单关闭
+                }}
                 onDeleteKb={() => {
                   // 如果删除的是当前选中的知识库，清空选择
                   if (selectedKb) {
@@ -56,8 +80,9 @@ export default function KnowledgeBaseDashboard({ apiKey }: KnowledgeBaseDashboar
                   }
                 }}
                 onEditKb={(kb) => {
-                  // 可以实现编辑功能
-                  console.log('编辑知识库:', kb);
+                  setEditingKb(kb);
+                  setShowEditForm(true);
+                  setShowCreateForm(false); // 确保创建表单关闭
                 }}
               />
             )}

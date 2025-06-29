@@ -111,7 +111,6 @@ export default function KnowledgeBaseList({
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900">{kb.kbName}</h4>
-                  <p className="text-sm text-gray-500 mt-1">ID: {kb.kbId}</p>
                   {kb.createTime && (
                     <p className="text-xs text-gray-400 mt-1">
                       创建时间: {new Date(kb.createTime).toLocaleString()}

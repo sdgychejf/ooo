@@ -117,14 +117,14 @@
 
 ### 1. QAnything 问答服务运行截图
 
-![image-20250630235555189](/Users/night/Documents/Codes/SaltyFish/250530-qanything-all/250530-qanything-7/assets/image-20250630235555189.png)![image-20250630235559906](/Users/night/Documents/Codes/SaltyFish/250530-qanything-all/250530-qanything-7/assets/image-20250630235559906.png)![image-20250630235605237](/Users/night/Documents/Codes/SaltyFish/250530-qanything-all/250530-qanything-7/assets/image-20250630235605237.png)
+![image-20250630235555189](./assets/image-20250630235555189.png)![image-20250630235559906](./assets/image-20250630235559906.png)![image-20250630235605237](./assets/image-20250630235605237.png)
 
-![image-20250630235622208](/Users/night/Documents/Codes/SaltyFish/250530-qanything-all/250530-qanything-7/assets/image-20250630235622208.png)
+![image-20250630235622208](./assets/image-20250630235622208.png)
 
 ### 2. WakaTime API 集成展示截图
 
-![image-20250630235644737](/Users/night/Documents/Codes/SaltyFish/250530-qanything-all/250530-qanything-7/assets/image-20250630235644737.png)
+![image-20250630235644737](./assets/image-20250630235644737.png)
 
 ### 3. Next.js 课程练习组织截图
 
-![image-20250630235633378](/Users/night/Documents/Codes/SaltyFish/250530-qanything-all/250530-qanything-7/assets/image-20250630235633378.png)
+![image-20250630235633378](./assets/image-20250630235633378.png)

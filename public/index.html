@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>畅游中国 - 全国旅游规划平台</title>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" as="style">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* 基础样式与变量定义 */
+        :root {
+            --primary-color: #3a7bd5;
+            --secondary-color: #00d2ff;
+            --accent-color: #ff6b6b;
+            --dark-color: #2d3436;
+            --light-color: #f9f9f9;
+            --text-color: #333;
+            --text-light: #636e72;
+            --success-color: #00b894;
+            --warning-color: #fdcb6e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--light-color);
+        }
+        
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+        
+        .btn-outline:hover {
+            background: white;
+            color: var(--primary-color);
+        }
+        
+        .section {
+            padding: 5rem 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--dark-color);
+            position: relative;
+            display: inline-block;
+            padding-bottom: 1rem;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+        
+        .section-title p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+        
+        /* 加载动画 */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        
+        .loader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .plane {
+            font-size: 3rem;
+            color: var(--primary-color);
+            animation: fly 1.5s infinite ease-in-out;
+        }
+        
+        @keyframes fly {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        /* 导航栏 */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 0;
+            position: relative;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 0.5rem;
+            color: var(--accent-color);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 2rem;
+            position: relative;
+        }
+        
+        .nav-links a {
+            font-weight: 600;
+            color: var(--dark-color);
+            transition: color 0.3s ease;
+        }
+        
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-color);
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--dark-color);
+            cursor: pointer;
+        }
+        
+        /* 英雄区域 */
+        .hero {
+            height: 90vh;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                        url('https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+            color: white;
+            text-align: center;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .search-box {
+            display: flex;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-field {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+        }
+        
+        .search-field i {
+            color: var(--text-light);
+            margin-right: 0.8rem;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 1.2rem 0;
+            border: none;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .search-box button {
+            padding: 0 2.5rem;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .search-box button:hover {
+            background: #d9432e;
+        }
+        
+        /* 热门目的地 */
+        .destinations {
+            background-color: white;
+        }
+        
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        
+        .destination-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .destination-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .destination-img {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .destination-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .destination-card:hover .destination-img img {
+            transform: scale(1.1);
+        }
+        
+        .destination-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .destination-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .destination-card:hover .destination-overlay {
+            opacity: 1;
+        }
+        
+        .destination-info {
+            padding: 1.5rem;
+        }
+        
+        .rating {
+            color: var(--warning-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .rating span {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+        
+        .destination-info h3 {
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+        
+        .destination-info p {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        
+        .destination-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        /* 旅游攻略 */
+        .guides {
+            background-color: var(--light-color);
+        }
+        
+        .guide-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 0.8rem 1.5rem;
+            margin: 0 0.5rem 1rem;
+            background: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: none;
+            outline: none;
+        }
+        
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .guide-content {
+            display: none;
+        }
+        
+        .guide-content.active {
+            display: block;
+        }
+        
+        .guide-article {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .guide-article:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .guide-article-img {
+            height: 250px;
+            overflow: hidden;
+        }
+        
+        .guide-article-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .guide-article-content {
+            padding: 2rem;
+        }
+        
+        .guide-article-content h3 {
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+        
+        .guide-article-content .meta {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .guide-article-content .meta span {
+            margin-right: 1.5rem;
+        }
+        
+        .guide-article-content .meta i {
+            margin-right: 0.5rem;
+        }
+        
+        .guide-article-content p {
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+        
+        /* 用户评价 */
+        .testimonials {
+            background-color: white;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .testimonial-card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .testimonial-content {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        
+        .quote {
+            color: var(--primary-color);
+            opacity: 0.2;
+            font-size: 3rem;
+            position: absolute;
+            top: -1rem;
+            left: -0.5rem;
+        }
+        
+        .testimonial-content p {
+            position: relative;
+            z-index: 1;
+            font-style: italic;
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+        }
+        
+        .testimonial-author img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 1rem;
+        }
+        
+        .testimonial-author h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .testimonial-author span {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        
+        /* 出行方案 */
+        .plans {
+            background-color: var(--light-color);
+        }
+        
+        .plan-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .plan-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .plan-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .plan-header h3 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-price {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-price span {
+            font-size: 1rem;
+            font-weight: normal;
+        }
+        
+        .plan-body {
+            padding: 1.5rem;
+        }
+        
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+        
+        .plan-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .plan-features li i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+        
+        /* 中国地图 */
+        .map-section {
+            background-color: white;
+        }
+        
+        #china-map {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 页脚 */
+        footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.8rem;
+        }
+        
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--primary-color);
+        }
+        
+        .footer-column p {
+            color: #bbb;
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .footer-column a {
+            color: #bbb;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-column a:hover {
+            color: white;
+        }
+        
+        .social-links {
+            display: flex;
+            margin-top: 1rem;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            background: var(--primary-color);
+            transform: translateY(-3px);
+        }
+        
+        .footer-column .contact-info {
+            list-style: none;
+        }
+        
+        .footer-column .contact-info li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-column .contact-info i {
+            margin-right: 0.8rem;
+            color: var(--primary-color);
+            width: 20px;
+            text-align: center;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+            
+            .search-box {
+                flex-direction: column;
+                background: transparent;
+                box-shadow: none;
+            }
+            
+            .search-field {
+                background: white;
+                border-radius: 50px;
+                margin-bottom: 0.8rem;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .search-box button {
+                border-radius: 50px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: white;
+                flex-direction: column;
+                align-items: center;
+                padding: 1rem 0;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+                transform: translateY(-150%);
+                transition: transform 0.3s ease;
+            }
+            
+            .nav-links.active {
+                transform: translateY(0);
+            }
+            
+            .nav-links li {
+                margin: 0.5rem 0;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .section {
+                padding: 3rem 0;
+            }
+            
+            .section-title h2 {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero {
+                height: 80vh;
+                min-height: 500px;
+            }
+            
+            .destination-card, .testimonial-card {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载动画 -->
+    <div class="loader">
+        <div class="plane">
+            <i class="fas fa-plane"></i>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">
+                    <i class="fas fa-map-marked-alt"></i>畅游中国
+                </a>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="#home" class="active">首页</a></li>
+                    <li><a href="#destinations">热门目的地</a></li>
+                    <li><a href="#guides">旅游攻略</a></li>
+                    <li><a href="#testimonials">用户评价</a></li>
+                    <li><a href="#plans">出行方案</a></li>
+                    <li><a href="#about">关于我们</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 英雄区域 -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>发现中国的美丽</h1>
+            <p>为您提供全国最全面的旅游规划服务，从城市到乡村，从高山到大海，一站式解决您的旅行需求</p>
+            <div class="search-box">
+                <div class="search-field">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="想去哪里玩？">
+                </div>
+                <div class="search-field">
+                    <i class="fas fa-calendar-alt"></i>
+                    <input type="text" id="datepicker" placeholder="选择日期">
+                </div>
+                <button class="btn btn-primary">搜索</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 热门目的地 -->
+    <section class="section destinations" id="destinations">
+        <div class="container">
+            <div class="section-title">
+                <h2>热门目的地</h2>
+                <p>探索中国最受欢迎的旅游城市和景点</p>
+            </div>
+            <div class="destinations-grid">
+                <!-- 目的地1 -->
+                <div class="destination-card">
+                    <div class="destination-img">
+                        <img src="https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="北京">
+                        <div class="destination-badge">热门</div>
+                        <div class="destination-overlay">
+                            <a href="#" class="btn btn-outline">查看详情</a>
+                        </div>
+                    </div>
+                    <div class="destination-info">
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <span>4.8</span>
+                        </div>
+                        <h3>北京</h3>
+                        <p>中国的首都，融合了古老文化和现代文明</p>
+                        <div class="destination-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> 华北地区</span>
+                            <span><i class="fas fa-clock"></i> 3-5天</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 目的地2 -->
+                <div class="destination-card">
+                    <div class="destination-img">
+                        <img src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="上海">
+                        <div class="destination-overlay">
+                            <a href="#" class="btn btn-outline">查看详情</a>
+                        </div>
+                    </div>
+                    <div class="destination-info">
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span>4.9</span>
+                        </div>
+                        <h3>上海</h3>
+                        <p>东方明珠，现代化国际大都市</p>
+                        <div class="destination-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> 华东地区</span>
+                            <span><i class="fas fa-clock"></i> 2-4天</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 目的地3 -->
+                <div class="destination-card">
+                    <div class="destination-img">
+                        <img src="https://images.unsplash.com/photo-1560840067-ddcaeb7831d2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="西安">
+                        <div class="destination-badge">文化</div>
+                        <div class="destination-overlay">
+                            <a href="#" class="btn btn-outline">查看详情</a>
+                        </div>
+                    </div>
+                    <div class="destination-info">
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span>5.0</span>
+                        </div>
+                        <h3>西安</h3>
+                        <p>千年古都，兵马俑的故乡</p>
+                        <div class="destination-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> 西北地区</span>
+                            <span><i class="fas fa-clock"></i> 2-3天</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 目的地4 -->
+                <div class="destination-card">
+                    <div class="destination-img">
+                        <img src="https://images.unsplash.com/photo-1533856493584-0c6ca8ca9ce3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="成都">
+                        <div class="destination-badge">美食</div>
+                        <div class="destination-overlay">
+                            <a href="#" class="btn btn-outline">查看详情</a>
+                        </div>
+                    </div>
+                    <div class="destination-info">
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span>4.7</span>
+                        </div>
+                        <h3>成都</h3>
+                        <p>天府之国，熊猫的故乡</p>
+                        <div class="destination-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> 西南地区</span>
+                            <span><i class="fas fa-clock"></i> 3-4天</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="#" class="btn btn-primary">查看更多目的地</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 旅游攻略 -->
+    <section class="section guides" id="guides">
+        <div class="container">
+            <div class="section-title">
+                <h2>旅游攻略</h2>
+                <p>专业旅行者分享的实用信息和经验</p>
+            </div>
+            
+            <div class="guide-tabs">
+                <div class="tab-btn active" data-tab="popular">热门攻略</div>
+                <div class="tab-btn" data-tab="food">美食推荐</div>
+                <div class="tab-btn" data-tab="accommodation">住宿指南</div>
+                <div class="tab-btn" data-tab="transportation">交通信息</div>
+            </div>
+            
+            <div class="guide-content active" id="popular">
+                <!-- 攻略文章1 -->
+                <div class="guide-article">
+                    <div class="guide-article-img">
+                        <img src="https://images.unsplash.com/photo-1533856493584-0c6ca8ca9ce3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="北京三日游">
+                    </div>
+                    <div class="guide-article-content">
+                        <h3>北京经典三日游攻略</h3>
+                        <div class="meta">
+                            <span><i class="fas fa-user"></i> 张三</span>
+                            <span><i class="fas fa-calendar-alt"></i> 2023-05-15</span>
+                            <span><i class="fas fa-eye"></i> 1.2k浏览</span>
+                        </div>
+                        <p>这篇攻略将带您用三天时间游览北京最著名的景点，包括故宫、天安门、长城等。我们提供了详细的行程安排、交通建议和门票信息，帮助您高效规划北京之旅...</p>
+                        <a href="#" class="btn btn-primary">阅读全文</a>
+                    </div>
+                </div>
+                
+                <!-- 攻略文章2 -->
+                <div class="guide-article">
+                    <div class="guide-article-img">
+                        <img src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="上海美食">
+                    </div>
+                    <div class="guide-article-content">
+                        <h3>上海必吃美食全攻略</h3>
+                        <div class="meta">
+                            <span><i class="fas fa-user"></i> 李四</span>
+                            <span><i class="fas fa-calendar-alt"></i> 2023-04-28</span>
+                            <span><i class="fas fa-eye"></i> 2.3k浏览</span>
+                        </div>
+                        <p>上海作为国际化大都市，汇聚了全国各地乃至世界各地的美食。本攻略精选了上海最值得尝试的本地特色美食，从小笼包到生煎，从本帮菜到夜市小吃，带您吃遍上海...</p>
+                        <a href="#" class="btn btn-primary">阅读全文</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="guide-content" id="food">
+                <!-- 美食攻略内容 -->
+                <div class="guide-article">
+                    <div class="guide-article-img">
+                        <img src="https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="成都火锅">
+                    </div>
+                    <div class="guide-article-content">
+                        <h3>成都火锅指南：从入门到精通</h3>
+                        <div class="meta">
+                            <span><i class="fas fa-user"></i> 王五</span>
+                            <span><i class="fas fa-calendar-alt"></i> 2023-06-10</span>
+                            <span><i class="fas fa-eye"></i> 1.8k浏览</span>
+                        </div>
+                        <p>成都是中国火锅之都，这篇攻略将带您了解成都火锅的历史、种类、吃法和最佳店铺推荐。无论您是火锅新手还是老饕，都能从中获得有用的信息...</p>
+                        <a href="#" class="btn btn-primary">阅读全文</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="#" class="btn btn-primary">查看更多攻略</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 用户评价 -->
+    <section class="section testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-title">
+                <h2>用户评价</h2>
+                <p>听听旅行者们的真实体验</p>
+            </div>
+            
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="quote"><i class="fas fa-quote-left"></i></div>
+                        <p>通过畅游中国规划的行程非常完美，节省了我大量时间，推荐的景点都很棒！</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="张女士">
+                        <div>
+                            <h4>张女士</h4>
+                            <span>北京五日游</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="quote"><i class="fas fa-quote-left"></i></div>
+                        <p>住宿推荐非常准确，价格合理位置优越，导游服务专业热情，下次还会选择！</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="李先生">
+                        <div>
+                            <h4>李先生</h4>
+                            <span>上海三日游</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="quote"><i class="fas fa-quote-left"></i></div>
+                        <p>美食攻略太实用了，按照推荐吃下来没有踩雷，特别是那家老字号火锅店！</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="王女士">
+                        <div>
+                            <h4>王女士</h4>
+                            <span>成都美食之旅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 中国地图 -->
+    <section class="section map-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>探索中国</h2>
+                <p>点击地图探索各地旅游资源</p>
+            </div>
+            <div id="china-map" style="height: 500px;"></div>
+        </div>
+    </section>
+
+    <!-- 出行方案 -->
+    <section class="section plans" id="plans">
+        <div class="container">
+            <div class="section-title">
+                <h2>出行方案</h2>
+                <p>根据您的需求定制的旅行计划</p>
+            </div>
+            
+            <div class="plan-cards">
+                <!-- 方案1 -->
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <h3>经济型</h3>
+                        <div class="plan-price">¥999<span>/人起</span></div>
+                        <p>适合预算有限的旅行者</p>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 经济型酒店住宿</li>
+                            <li><i class="fas fa-check"></i> 公共交通接驳</li>
+                            <li><i class="fas fa-check"></i> 基础景点门票</li>
+                            <li><i class="fas fa-check"></i> 当地特色简餐</li>
+                            <li><i class="fas fa-check"></i> 24小时客服支持</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary" style="width: 100%;">立即预订</a>
+                    </div>
+                </div>
+                
+                <!-- 方案2 -->
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <h3>舒适型</h3>
+                        <div class="plan-price">¥1999<span>/人起</span></div>
+                        <p>最受欢迎的选择</p>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 三星级酒店住宿</li>
+                            <li><i class="fas fa-check"></i> 专车接送服务</li>
+                            <li><i class="fas fa-check"></i> 主要景点门票</li>
+                            <li><i class="fas fa-check"></i> 当地特色餐厅</li>
+                            <li><i class="fas fa-check"></i> 专业导游服务</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary" style="width: 100%;">立即预订</a>
+                    </div>
+                </div>
+                
+                <!-- 方案3 -->
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <h3>豪华型</h3>
+                        <div class="plan-price">¥3999<span>/人起</span></div>
+                        <p>尊享奢华旅行体验</p>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> 五星级酒店住宿</li>
+                            <li><i class="fas fa-check"></i> 私人专车服务</li>
+                            <li><i class="fas fa-check"></i> 全部景点VIP通道</li>
+                            <li><i class="fas fa-check"></i> 高端特色餐厅</li>
+                            <li><i class="fas fa-check"></i> 私人导游服务</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary" style="width: 100%;">立即预订</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer id="about">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>关于畅游中国</h3>
+                    <p>我们致力于为中国旅行者提供最全面、最实用的旅游信息和规划服务，帮助每个人发现中国的美丽。</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-weixin"></i></a>
+                        <a href="#"><i class="fab fa-weibo"></i></a>
+                        <a href="#"><i class="fab fa-qq"></i></a>
+                        <a href="#"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>快速链接</h3>
+                    <ul>
+                        <li><a href="#home">首页</a></li>
+                        <li><a href="#destinations">热门目的地</a></li>
+                        <li><a href="#guides">旅游攻略</a></li>
+                        <li><a href="#plans">出行方案</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>目的地</h3>
+                    <ul>
+                        <li><a href="#">北京</a></li>
+                        <li><a href="#">上海</a></li>
+                        <li><a href="#">广州</a></li>
+                        <li><a href="#">成都</a></li>
+                        <li><a href="#">西安</a></li>
+                        <li><a href="#">杭州</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>联系我们</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-phone"></i> 400-123-4567</li>
+                        <li><i class="fas fa-envelope"></i> info@changyouzhongguo.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 北京市朝阳区旅游大厦18层</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 畅游中国旅游规划平台. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/map/js/china.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载动画
+            setTimeout(() => {
+                document.querySelector('.loader').classList.add('fade-out');
+            }, 1500);
+            
+            // 初始化标签切换
+            initTabs();
+            
+            // 初始化导航栏滚动效果
+            initNavScroll();
+            
+            // 初始化日期选择器
+            if (document.getElementById('datepicker')) {
+                initDatePicker();
+            }
+            
+            // 初始化地图
+            if (document.getElementById('china-map')) {
+                initMap();
+            }
+            
+            // 移动菜单
+            initMobileMenu();
+            
+            // 懒加载图片
+            initLazyLoad();
+        });
+
+        function initTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const guideContents = document.querySelectorAll('.guide-content');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    guideContents.forEach(c => c.classList.remove('active'));
+                    
+                    btn.classList.add('active');
+                    const tabId = btn.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        function initNavScroll() {
+            const header = document.querySelector('header');
+            const navLinks = document.querySelectorAll('.nav-links a');
+            
+            // 滚动时高亮当前部分
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 100) {
+                    header.style.boxShadow = '0 2px 15px rgba(0, 0, 0, 0.2)';
+                    header.style.background = 'rgba(255, 255, 255, 0.95)';
+                } else {
+                    header.style.boxShadow = '0 2px 15px rgba(0, 0, 0, 0.1)';
+                    header.style.background = 'rgba(255, 255, 255, 1)';
+                }
+                
+                // 高亮当前部分导航
+                const sections = document.querySelectorAll('section');
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (pageYOffset >= sectionTop - 300) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        function initDatePicker() {
+            flatpickr("#datepicker", {
+                mode: "range",
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                locale: "zh"
+            });
+        }
+
+        function initMap() {
+            const chart = echarts.init(document.getElementById('china-map'));
+            
+            // 地图配置
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}<br/>热门景点: {c}'
+                },
+                visualMap: {
+                    min: 0,
+                    max: 100,
+                    text: ['高', '低'],
+                    realtime: false,
+                    calculable: true,
+                    inRange: {
+                        color: ['#e0f3f8', '#abd9e9', '#74add1', '#4575b4', '#313695']
+                    }
+                },
+                series: [{
+                    name: '热门景点',
+                    type: 'map',
+                    map: 'china',
+                    emphasis: {
+                        label: {
+                            show: true
+                        }
+                    },
+                    data: [
+                        {name: '北京', value: 95},
+                        {name: '上海', value: 90},
+                        {name: '广东', value: 88},
+                        {name: '四川', value: 85},
+                        {name: '陕西', value: 80},
+                        {name: '浙江', value: 78},
+                        {name: '江苏', value: 75},
+                        {name: '云南', value: 70},
+                        {name: '海南', value: 68},
+                        {name: '福建', value: 65}
+                    ]
+                }]
+            };
+            
+            chart.setOption(option);
+            
+            // 响应式调整
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
+        }
+
+        function initMobileMenu() {
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const navLinks = document.querySelector('.nav-links');
+            
+            menuBtn.addEventListener('click', function() {
+                navLinks.classList.toggle('active');
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            });
+        }
+
+        function initLazyLoad() {
+            const lazyImages = [].slice.call(document.querySelectorAll('img.lazyload'));
+            
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src;
+                            img.classList.remove('lazyload');
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+                
+                lazyImages.forEach(img => imageObserver.observe(img));
+            }
+        }
+    </script>
+</body>
+</html>

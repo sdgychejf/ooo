@@ -27,10 +27,12 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50`}
       >
-        <Navigation />
-        <main>{children}</main>
+        <div className="flex min-h-screen">
+          <main className="flex-1">{children}</main>
+          <Navigation />
+        </div>
         <WakaTimeStats />
       </body>
     </html>
